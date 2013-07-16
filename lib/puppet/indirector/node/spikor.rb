@@ -22,7 +22,12 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
 
     path = File.join(spikor_config[:environmentpath], name)
 
-    facts = Puppet::Node::Facts.indirection.find(request.key).values
+    facts = Puppet::Node::Facts.indirection.find(request.key)
+    if facts
+      facts = facts.values
+    else
+      facts = {}
+    end
     facts['environment'] = name
 
     if create_env
