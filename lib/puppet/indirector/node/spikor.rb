@@ -43,7 +43,8 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
       moduletool = Puppet::Face[:module, '1']
       modules.each do |modname, mod|
         options = {
-          :modulepath => File.join(path, spikor_config[:moduledir]),
+          :modulepath  => File.join(path, spikor_config[:moduledir]),
+          :environment => nodeenvironment,
         }
         options[:version] = mod['version'] if mod['version']
         result = moduletool.install(modname, options)
