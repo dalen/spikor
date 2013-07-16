@@ -87,7 +87,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
   #
   # @return [String] name of the matching ref
   def find_git_ref(environment)
-    refs = git_refs(spikor_config[:repository]).grep Regexp.new(environment.sub '_', '.')
+    refs = git_refs(spikor_config[:repository]).grep Regexp.new(environment.sub('_', '.'))
     raise "Ambiguous environment \"#{environment}\", #{refs.length} git refs matching" if refs.length > 1
     return refs.first if refs.length
     environment
@@ -106,6 +106,6 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
   def git_checkout(repository, ref, path)
     Dir.mkdir(path)
     output = `#{spikor_config[:git]} --git-dir=#{repository} --work-tree=#{path} checkout --force --quiet #{ref} 2>&1`
-    raise output.lines.to_a.join " " if $?.to_i != 0
+    raise output.lines.to_a.join(" ") if $?.to_i != 0
   end
 end
