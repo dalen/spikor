@@ -8,12 +8,14 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
   desc 'Get node information from Hiera. Queries the keys "environment", "classes" and "parameters".'
 
   def find(request)
-    nodeenvironment = request.environment.name.to_s
-    Puppet.debug "Spikor: nodeenv=#{nodeenvironment}"
+    # Get node object from the configured node_terminus
+    node = Puppet::Node.indirection.terminus(spikor_config[:node_terminus].to_sym).find(request)
+
+    Puppet.debug "Spikor: node environment=#{node.environment}"
 
     # See if we have already created the environment or if we need to create it now
-    if File.exist? File.join(spikor_config[:environmentpath], nodeenvironment)
-      name = nodeenvironment
+    if File.exist? File.join(spikor_config[:environmentpath], node.environment)
+      name = node.environment
       create_env = false
     else
       name = request.key.gsub(/\W/, '_') + '_' + Time.now.utc.to_i.to_s
@@ -31,7 +33,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
     facts['environment'] = name
 
     if create_env
-      ref = find_git_ref nodeenvironment
+      ref = find_git_ref node.environment
       Puppet.debug "Spikor: using git ref #{ref}"
 
       git_checkout spikor_config[:repository], ref, path
@@ -44,7 +46,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
       modules.each do |modname, mod|
         options = {
           :modulepath  => File.join(path, spikor_config[:moduledir]),
-          :environment => nodeenvironment,
+          :environment => node.environment,
         }
         options[:version] = mod['version'] if mod['version']
         result = moduletool.install(modname, options)
@@ -52,13 +54,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
       end
     end
 
-    node = Puppet::Node.new(
-      request.key,
-      :environment => name,
-      :parameters  => hiera.lookup('parameters', {}, facts, nil, :hash),
-      :classes     => hiera.lookup('classes', [], facts, nil, :array)
-    )
-    node.fact_merge
+    node.environment = name
     node
   end
 
@@ -67,11 +63,12 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
   def self.spikor_config
     configfile = File.join Puppet.settings[:confdir], 'spikor.yaml'
     config = {
-      :repository => File.join(Puppet.settings[:confdir], 'repositories', 'puppet.git'),
+      :repository      => File.join(Puppet.settings[:confdir], 'repositories', 'puppet.git'),
       :environmentpath => File.join(Puppet.settings[:confdir], 'environments'),
-      :hieradir => 'hiera-data',
-      :moduledir => 'modules',
-      :git => 'git',
+      :hieradir        => 'hiera-data',
+      :moduledir       => 'modules',
+      :git             => 'git',
+      :node_terminus   => :exec,
     }
 
     if File.exist?(configfile)
