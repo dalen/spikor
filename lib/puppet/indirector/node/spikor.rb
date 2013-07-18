@@ -9,7 +9,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
 
   def find(request)
     nodeenvironment = request.environment.name.to_s
-    Puppet.warning "Spikor: nodeenv=#{nodeenvironment}"
+    Puppet.debug "Spikor: nodeenv=#{nodeenvironment}"
 
     # See if we have already created the environment or if we need to create it now
     if File.exist? File.join(spikor_config[:environmentpath], nodeenvironment)
