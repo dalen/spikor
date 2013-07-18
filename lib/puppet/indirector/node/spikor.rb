@@ -5,7 +5,7 @@ require 'puppet/indirector/hiera'
 require 'yaml'
 
 class Puppet::Node::Spikor < Puppet::Indirector::Hiera
-  desc 'Get node information from Hiera. Queries the keys "environment", "classes" and "parameters".'
+  desc 'Create a dynamic node specific environment. Queries the key "modules" in hiera to find the modules to install.'
 
   def find(request)
     # Get node object from the configured node_terminus
