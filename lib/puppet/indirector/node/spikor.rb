@@ -74,7 +74,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
     if File.exist?(configfile)
       config.merge! YAML.load_file(configfile)
     else
-      Puppet.warning "Config file #{configfile} not found, using Spikor defaults"
+      Puppet.debug "Config file #{configfile} not found, using Spikor defaults"
     end
 
     config
