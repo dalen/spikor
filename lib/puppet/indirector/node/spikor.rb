@@ -65,7 +65,6 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
     config = {
       :repository      => File.join(Puppet.settings[:confdir], 'repositories', 'puppet.git'),
       :environmentpath => File.join(Puppet.settings[:confdir], 'environments'),
-      :hieradir        => 'hiera-data',
       :moduledir       => 'modules',
       :git             => 'git',
       :node_terminus   => :exec,
