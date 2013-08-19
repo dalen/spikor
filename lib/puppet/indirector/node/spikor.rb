@@ -23,7 +23,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
     end
 
     if create_env
-      ref = find_git_ref node.environment
+      ref = git_find_ref spikor_config[:repository], node.environment
       Puppet.debug "Spikor: using git ref #{ref}"
 
       # Create a checkout of the repository for the node environment
@@ -95,16 +95,21 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
   # Find a git ref matching the environment string. Uses _ as a wildcard character.
   # Throw exception if several refs match.
   #
-  # @return [String] name of the matching ref
-  def find_git_ref(environment)
-    refs = git_refs(spikor_config[:repository]).grep Regexp.new(environment.sub('_', '.'))
+  # repository  [String] Path to the (bare) git repository
+  # environment [String] The Puppet environment name to search for
+  # @return     [String] name of the matching ref
+  def git_find_ref(repository, environment)
+    refs = git_refs(repository).grep Regexp.new(environment.sub('_', '.'))
     raise "Ambiguous environment \"#{environment}\", #{refs.length} git refs matching" if refs.length > 1
     return refs.first if refs.length
     environment
   end
 
   ##
-  # @return [Array] a list of branches and tags
+  # Get a list of all branches and tags from a git repository
+  #
+  # repository [String] Path to the (bare) git repository
+  # @return    [Array]  a list of branches and tags
   def git_refs(repository)
     `#{spikor_config[:git]} --git-dir=#{repository} branch --no-color`.lines.collect do |branch|
       branch.slice(2..-1).chomp
@@ -113,6 +118,13 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
     end
   end
 
+  ##
+  # Checkout the specified ref from a git repository into the path specified
+  # The path is created if it doesn't exist.
+  #
+  # repository [String] Path to the (bare) git repository
+  # ref        [String] The git ref to checkout
+  # path       [String] The path to checkout into
   def git_checkout(repository, ref, path)
     Dir.mkdir(path)
     output = `#{spikor_config[:git]} --git-dir=#{repository} --work-tree=#{path} checkout --force --quiet #{ref} 2>&1`
