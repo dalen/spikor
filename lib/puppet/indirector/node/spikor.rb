@@ -22,23 +22,30 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
       create_env = true
     end
 
-    path = File.join(spikor_config[:environmentpath], name)
-
-    facts = Puppet::Node::Facts.indirection.find(request.key)
-    if facts
-      facts = facts.values
-    else
-      facts = {}
-    end
-    facts['environment'] = name
-
     if create_env
       ref = find_git_ref node.environment
       Puppet.debug "Spikor: using git ref #{ref}"
 
+      # Create a checkout of the repository for the node environment
+      path = File.join(spikor_config[:environmentpath], name)
       git_checkout spikor_config[:repository], ref, path
 
-      modules = hiera.lookup('modules', {}, facts, nil, :hash)
+      if :module_config == :hiera
+        # Lookup modules to use from hiera using key 'modules'
+        facts = Puppet::Node::Facts.indirection.find(request.key)
+        if facts
+          facts = facts.values
+        else
+          Puppet.debug "Spikor: could not find facts for #{node}"
+          facts = {}
+        end
+        facts['environment'] = name
+
+        modules = hiera.lookup('modules', {}, facts, nil, :hash)
+      else
+        # Otherwise take the value of the 'modules' parameter/fact
+        modules = node.parameters['modules'] || {}
+      end
       Puppet.warning "No modules found for #{request.key}" if modules.empty?
 
       # Install each specified module into the node environment
@@ -68,6 +75,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
       :moduledir       => 'modules',
       :git             => 'git',
       :node_terminus   => :exec,
+      :module_config   => :hiera,
     }
 
     if File.exist?(configfile)
