@@ -36,7 +36,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
         if facts
           facts = facts.values
         else
-          Puppet.debug "Spikor: could not find facts for #{node}"
+          Puppet.debug "Spikor: could not find facts for #{request.key}"
           facts = {}
         end
         facts['environment'] = name
