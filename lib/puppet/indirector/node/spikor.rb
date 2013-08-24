@@ -99,7 +99,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
   # environment [String] The Puppet environment name to search for
   # @return     [String] name of the matching ref
   def git_find_ref(repository, environment)
-    refs = git_refs(repository).grep Regexp.new(environment.sub('_', '.'))
+    refs = git_refs(repository).grep Regexp.new('^' + environment.sub('_', '.') + '$')
     raise "Ambiguous environment \"#{environment}\", #{refs.length} git refs matching" if refs.length > 1
     return refs.first if refs.length
     environment
