@@ -14,8 +14,8 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
     Puppet.debug "Spikor: node environment=#{node.environment}"
 
     # See if we have already created the environment or if we need to create it now
-    if File.exist? File.join(spikor_config[:environmentpath], node.environment)
-      name = node.environment
+    if File.exist? File.join(spikor_config[:environmentpath], node.environment.to_s)
+      name = node.environment.to_s
       create_env = false
     else
       name = request.key.gsub(/\W/, '_') + '_' + Time.now.utc.to_i.to_s
@@ -23,7 +23,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
     end
 
     if create_env
-      ref = git_find_ref spikor_config[:repository], node.environment
+      ref = git_find_ref spikor_config[:repository], node.environment.to_s
       Puppet.debug "Spikor: using git ref #{ref}"
 
       # Create a checkout of the repository for the node environment
