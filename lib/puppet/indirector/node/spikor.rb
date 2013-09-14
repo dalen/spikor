@@ -30,7 +30,7 @@ class Puppet::Node::Spikor < Puppet::Indirector::Hiera
       path = File.join(spikor_config[:environmentpath], name)
       git_checkout spikor_config[:repository], ref, path
 
-      if :module_config == :hiera
+      if spikor_config[:module_config].to_sym == :hiera
         # Lookup modules to use from hiera using key 'modules'
         facts = Puppet::Node::Facts.indirection.find(request.key)
         if facts
